@@ -42,7 +42,12 @@ except URLError as e:
 
 streamlit.stop()
 
-my_cnx = snowflake.connector.connect(**streamlit.secrets["snowflake"])
+def insert_row_snowflake(new_fruit):
+  with my_cnx.cur() as my_cur:
+    my_cur.execute("INSERT INTO fruit_load_list VALUES ('" + new_fruit + "');")
+    return "Thanks for adding " + new_fruit
+
+
 my_cur = my_cnx.cursor()
 # my_cur.execute("use warehouse COMPUTE_WH;")
 my_cur.execute("select * from fruit_load_list")
@@ -50,9 +55,9 @@ my_data_row = my_cur.fetchall()
 streamlit.header("The fruit load list contains:")
 streamlit.dataframe(my_data_row)
 
-fruit_to_add = streamlit.text_input('What fruit would you like add?','jackfruit')
-streamlit.write('Thanks for adding ', fruit_to_add)
+fruit_to_add = streamlit.text_input('What fruit would you like add?')
+if streamlit.button('Add a Fruit to the List'):
+  my_cnx = snowflake.connector.connect(**streamlit.secrets["snowflake"])
+  back_from_function = insert_row_snowflake(fruit_to_add)
+  streamlit.write(back_from_function)
 
-sql_fruit_to_add = "INSERT INTO fruit_load_list VALUES ('" + fruit_to_add + "');"
-
-my_cur.execute(sql_fruit_to_add)
